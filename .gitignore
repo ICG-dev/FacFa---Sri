@@ -1,0 +1,93 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+PLAN.md
+
+# Variables de entorno y credenciales locales (conservar la plantilla)
+.env.*
+.env-*
+.env_*
+.env~
+*.env
+*.env.*
+!.env.example
+auth.json
+.npmrc
+.pypirc
+.netrc
+
+# Certificados SRI, firmas y claves privadas (tambien extensiones en mayusculas)
+*.[pP]12
+*.[pP][fF][xX]
+*.[pP][eE][mM]
+*.[kK][eE][yY]
+*.[cC][rR][tT]
+*.[cC][eE][rR]
+*.[dD][eE][rR]
+
+# Bases de datos locales, archivos auxiliares y volcados
+*.[sS][qQ][lL][iI][tT][eE]*
+*.[dD][bB]
+*.[dD][bB]-*
+*.[dD][bB].*
+*.sql
+*.sql.*
+*.dump
+*.dump.*
+
+# Comprobantes XML y PDF/RIDE, incluidos respaldos y versiones comprimidas
+*.[xX][mM][lL]
+*.[xX][mM][lL].*
+*.[pP][dD][fF]
+*.[pP][dD][fF].*
+# Configuracion de pruebas, sin datos de clientes
+!/phpunit.xml
+
+# Logs, incluidos archivos rotados
+*.log.*
+*.log-*
+**/logs/*
+!**/logs/.gitignore
+
+# Dependencias, entornos virtuales y resultados de compilacion en cualquier nivel
+node_modules/
+vendor/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+dist/
+build/
+
+# Datos privados/publicos, sesiones, caches y archivos generados por Laravel
+# Conservar solo los .gitignore que mantienen la estructura de directorios
+/storage/app/**
+!/storage/app/**/
+!/storage/app/**/.gitignore
+/storage/framework/**
+!/storage/framework/**/
+!/storage/framework/**/.gitignore
+/bootstrap/cache/**
+!/bootstrap/cache/**/
+!/bootstrap/cache/**/.gitignore
