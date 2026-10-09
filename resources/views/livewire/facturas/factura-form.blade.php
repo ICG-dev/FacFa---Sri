@@ -114,7 +114,7 @@
                                                         class="w-full text-left px-3 py-2 text-xs hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border last:border-b-0"
                                                     >
                                                         <div class="font-mono font-semibold">{{ $producto->codigo_principal }}</div>
-                                                        <div class="text-muted-foreground truncate">{{ $producto->descripcion }} — ${{ number_format($producto->precio_unitario, 2) }}</div>
+                                                        <div class="text-muted-foreground truncate">{{ $producto->descripcion }} — ${{ \App\Services\Sri\FacturaCalculoService::formatear($producto->precio_unitario) }}</div>
                                                     </button>
                                                 @endforeach
                                             </div>
@@ -142,31 +142,37 @@
                                 <div class="grid grid-cols-12 gap-2 items-start">
                                     <div class="col-span-2">
                                         <x-input-label :value="__('Cant.')" class="text-xs" />
-                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.cantidad" type="number" step="0.01" class="block w-full text-sm" />
+                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.cantidad" type="number" step="0.000001" class="block w-full text-sm" />
+                                        <x-input-error :messages="$errors->get('lineas.'.$indice.'.cantidad')" class="mt-1" />
                                     </div>
                                     <div class="col-span-2">
                                         <x-input-label :value="__('Precio unit.')" class="text-xs" />
-                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.precio_unitario" type="number" step="0.01" class="block w-full text-sm" />
+                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.precio_unitario" type="number" step="0.000001" class="block w-full text-sm" />
+                                        <x-input-error :messages="$errors->get('lineas.'.$indice.'.precio_unitario')" class="mt-1" />
                                     </div>
                                     <div class="col-span-2">
                                         <x-input-label :value="__('Subsidio')" class="text-xs" />
-                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.subsidio" type="number" step="0.01" class="block w-full text-sm" />
+                                        <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.subsidio" type="number" step="0.000001" class="block w-full text-sm" />
+                                        <x-input-error :messages="$errors->get('lineas.'.$indice.'.subsidio')" class="mt-1" />
                                     </div>
                                     <div class="col-span-2">
                                         <x-input-label :value="__('Desc.')" class="text-xs" />
                                         <x-text-input wire:model.live.debounce.500ms="lineas.{{ $indice }}.descuento" type="number" step="0.01" class="block w-full text-sm" />
+                                        <x-input-error :messages="$errors->get('lineas.'.$indice.'.descuento')" class="mt-1" />
                                     </div>
                                     <div class="col-span-2">
                                         <x-input-label :value="__('IVA %')" class="text-xs" />
-                                        <select wire:model.live="lineas.{{ $indice }}.tarifa" class="block w-full text-sm rounded-md border-border bg-input-background text-foreground shadow-sm focus:border-ring focus:ring-ring">
-                                            <option value="15">15%</option>
-                                            <option value="0">0%</option>
+                                        <select wire:model.live="lineas.{{ $indice }}.codigo_porcentaje" class="block w-full text-sm rounded-md border-border bg-input-background text-foreground shadow-sm focus:border-ring focus:ring-ring">
+                                            @foreach ($this->tarifasIva as $tarifa)
+                                                <option value="{{ $tarifa->codigo_porcentaje }}">{{ $tarifa->descripcion }}</option>
+                                            @endforeach
                                         </select>
+                                        <x-input-error :messages="$errors->get('lineas.'.$indice.'.codigo_porcentaje')" class="mt-1" />
                                     </div>
                                     <div class="col-span-2">
                                         <x-input-label :value="__('P. sin subsidio')" class="text-xs" />
                                         <p class="text-sm text-muted-foreground pt-1.5">
-                                            ${{ number_format(($linea['precio_unitario'] ?? 0) - ($linea['subsidio'] ?? 0), 2) }}
+                                            ${{ \App\Services\Sri\FacturaCalculoService::formatear($this->calculo['detalles'][$indice]['precio_sin_subsidio'] ?? '0') }}
                                         </p>
                                     </div>
                                 </div>
@@ -179,19 +185,19 @@
                     <dl class="space-y-1 text-sm max-w-xs ms-auto">
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">{{ __('Subtotal') }}</dt>
-                            <dd class="text-foreground">${{ number_format($this->totales['totalSinImpuestos'], 2) }}</dd>
+                            <dd class="text-foreground">${{ $this->totales['totalSinImpuestos'] }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">{{ __('Descuento') }}</dt>
-                            <dd class="text-foreground">${{ number_format($this->totales['totalDescuento'], 2) }}</dd>
+                            <dd class="text-foreground">${{ $this->totales['totalDescuento'] }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">{{ __('IVA') }}</dt>
-                            <dd class="text-foreground">${{ number_format($this->totales['totalImpuesto'], 2) }}</dd>
+                            <dd class="text-foreground">${{ $this->totales['totalImpuesto'] }}</dd>
                         </div>
                         <div class="flex justify-between font-semibold text-base pt-1 border-t border-border">
                             <dt class="text-foreground">{{ __('Total') }}</dt>
-                            <dd class="text-foreground">${{ number_format($this->totales['importeTotal'], 2) }}</dd>
+                            <dd class="text-foreground">${{ $this->totales['importeTotal'] }}</dd>
                         </div>
                     </dl>
                 </section>

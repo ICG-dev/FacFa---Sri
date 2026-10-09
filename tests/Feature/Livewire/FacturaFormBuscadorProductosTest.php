@@ -6,6 +6,7 @@ use App\Livewire\Facturas\FacturaForm;
 use App\Models\Empresa;
 use App\Models\Producto;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,7 +19,7 @@ class FacturaFormBuscadorProductosTest extends TestCase
     #[Test]
     public function escribir_un_codigo_muestra_sugerencias_del_catalogo_de_la_propia_empresa(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $empresa = Empresa::factory()->create();
         $usuario = User::factory()->create(['empresa_id' => $empresa->id]);
@@ -31,7 +32,6 @@ class FacturaFormBuscadorProductosTest extends TestCase
             'tarifa' => 15,
         ]);
 
-        
         Producto::factory()->create(['codigo_principal' => 'SILLA-02']);
 
         $component = Livewire::actingAs($usuario)
@@ -47,7 +47,7 @@ class FacturaFormBuscadorProductosTest extends TestCase
     #[Test]
     public function seleccionar_una_sugerencia_autocompleta_descripcion_precio_e_iva(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $empresa = Empresa::factory()->create();
         $usuario = User::factory()->create(['empresa_id' => $empresa->id]);
@@ -66,15 +66,15 @@ class FacturaFormBuscadorProductosTest extends TestCase
             ->call('seleccionarProducto', 0, $producto->id)
             ->assertSet('lineas.0.codigo_principal', 'SILLA-01')
             ->assertSet('lineas.0.descripcion', 'Silla de madera')
-            ->assertSet('lineas.0.precio_unitario', 45.50)
-            ->assertSet('lineas.0.tarifa', 0.0)
+            ->assertSet('lineas.0.precio_unitario', '45.500000')
+            ->assertSet('lineas.0.codigo_porcentaje', '0')
             ->assertSet('sugerenciasProductos', []);
     }
 
     #[Test]
     public function los_comodines_del_usuario_se_buscan_literalmente(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         $empresa = Empresa::factory()->create();
         $usuario = User::factory()->for($empresa)->create();
         $usuario->assignRole('facturador');

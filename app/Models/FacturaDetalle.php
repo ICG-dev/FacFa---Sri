@@ -30,16 +30,21 @@ class FacturaDetalle extends Model
     ];
 
     protected $casts = [
-        'cantidad' => 'decimal:2',
-        'precio_unitario' => 'decimal:2',
-        'subsidio' => 'decimal:2',
-        'precio_sin_subsidio' => 'decimal:2',
+        'cantidad' => 'decimal:6',
+        'precio_unitario' => 'decimal:6',
+        'subsidio' => 'decimal:6',
+        'precio_sin_subsidio' => 'decimal:6',
         'descuento' => 'decimal:2',
         'precio_total_sin_impuesto' => 'decimal:2',
         'tarifa' => 'decimal:2',
         'base_imponible' => 'decimal:2',
         'valor_impuesto' => 'decimal:2',
     ];
+
+    public function tarifaIva(): BelongsTo
+    {
+        return $this->belongsTo(TarifaIva::class, 'codigo_porcentaje', 'codigo_porcentaje');
+    }
 
     public function factura(): BelongsTo
     {

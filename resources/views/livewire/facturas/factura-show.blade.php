@@ -15,6 +15,12 @@
                 <div class="flex items-center justify-between">
                     <x-factura-estado-badge :estado="$factura->estado" class="text-sm px-3 py-1" />
 
+                    @can('descargarRide', $factura)
+                        <a href="{{ route('facturas.ride', $factura) }}" class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                            {{ __('Descargar RIDE') }}
+                        </a>
+                    @endcan
+
                     @if ($debeSondear)
                         <span class="text-xs text-muted-foreground flex items-center gap-1">
                             <svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">

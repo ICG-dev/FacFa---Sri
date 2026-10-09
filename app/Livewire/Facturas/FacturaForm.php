@@ -7,7 +7,13 @@ use App\Models\Factura;
 use App\Models\FacturaDetalle;
 use App\Models\FormaPago;
 use App\Models\Producto;
+use App\Models\TarifaIva;
 use App\Models\TipoIdentificacion;
+use App\Rules\CedulaEcuatoriana;
+use App\Rules\RucEcuatoriano;
+use App\Services\Sri\FacturaCalculoService;
+use Brick\Math\BigDecimal;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class FacturaForm extends Component
@@ -34,18 +40,13 @@ class FacturaForm extends Component
 
     public int $forma_pago = 1;
 
-    
     public array $lineas = [];
 
-    
     public array $sugerenciasProductos = [];
 
     public function mount(?Factura $factura = null): void
     {
-        
-        
-        
-        
+
         if ($factura && $factura->exists) {
             $this->authorize('update', $factura);
 
@@ -66,11 +67,11 @@ class FacturaForm extends Component
                 'codigo_auxiliar' => $detalle->codigo_auxiliar ?? '',
                 'descripcion' => $detalle->descripcion,
                 'detalle_adicional' => $detalle->detalle_adicional ?? '',
-                'cantidad' => (float) $detalle->cantidad,
-                'precio_unitario' => (float) $detalle->precio_unitario,
-                'subsidio' => (float) $detalle->subsidio,
-                'descuento' => (float) $detalle->descuento,
-                'tarifa' => (float) $detalle->tarifa,
+                'cantidad' => (string) $detalle->cantidad,
+                'precio_unitario' => (string) $detalle->precio_unitario,
+                'subsidio' => (string) $detalle->subsidio,
+                'descuento' => (string) $detalle->descuento,
+                'codigo_porcentaje' => $detalle->codigo_porcentaje,
             ])->all();
 
             return;
@@ -88,11 +89,11 @@ class FacturaForm extends Component
             'codigo_auxiliar' => '',
             'descripcion' => '',
             'detalle_adicional' => '',
-            'cantidad' => 1.00,
-            'precio_unitario' => 0,
-            'subsidio' => 0,
-            'descuento' => 0,
-            'tarifa' => 15,
+            'cantidad' => '1.000000',
+            'precio_unitario' => '0.000000',
+            'subsidio' => '0.000000',
+            'descuento' => '0.00',
+            'codigo_porcentaje' => '4',
         ];
     }
 
@@ -102,13 +103,6 @@ class FacturaForm extends Component
         $this->lineas = array_values($this->lineas);
         unset($this->sugerenciasProductos[$indice]);
     }
-
-    
-
-
-
-
-
 
     public function updated(string $name): void
     {
@@ -145,8 +139,8 @@ class FacturaForm extends Component
 
         $this->lineas[$indice]['codigo_principal'] = $producto->codigo_principal;
         $this->lineas[$indice]['descripcion'] = $producto->descripcion;
-        $this->lineas[$indice]['precio_unitario'] = (float) $producto->precio_unitario;
-        $this->lineas[$indice]['tarifa'] = (float) $producto->tarifa;
+        $this->lineas[$indice]['precio_unitario'] = (string) $producto->precio_unitario;
+        $this->lineas[$indice]['codigo_porcentaje'] = $producto->codigo_porcentaje;
 
         unset($this->sugerenciasProductos[$indice]);
     }
@@ -156,18 +150,19 @@ class FacturaForm extends Component
         unset($this->sugerenciasProductos[$indice]);
     }
 
+    public function getCalculoProperty(): array
+    {
+        return app(FacturaCalculoService::class)->calcular($this->lineas, previsualizar: true);
+    }
+
     public function getTotalesProperty(): array
     {
-        
-        $lineas = array_map(function ($linea) {
-            if (! in_array((string) ($linea['tarifa'] ?? ''), ['0', '5', '8', '15'], true)) {
-                $linea['tarifa'] = 0;
-            }
+        return $this->calculo['totales'];
+    }
 
-            return $linea;
-        }, $this->lineas);
-
-        return app(GuardarBorradorFacturaAction::class)->calcularTotales($lineas);
+    public function getTarifasIvaProperty()
+    {
+        return TarifaIva::activas()->orderBy('porcentaje')->orderBy('codigo_porcentaje')->get();
     }
 
     public function getFormasPagoProperty()
@@ -182,12 +177,21 @@ class FacturaForm extends Component
 
     public function guardar(GuardarBorradorFacturaAction $accion): void
     {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                foreach ($this->lineas as $indice => $linea) {
+                    foreach (app(FacturaCalculoService::class)->erroresLinea($linea) as $campo => $mensaje) {
+                        $validator->errors()->add("lineas.{$indice}.{$campo}", $mensaje);
+                    }
+                }
+            });
+        });
         $datos = $this->validate([
             'fecha_emision' => ['required', 'date'],
             'tipo_identificacion_comprador' => ['required', 'string', 'exists:tipos_identificacion,codigo'],
             'identificacion_comprador' => ['required', 'string', 'max:20', match ($this->tipo_identificacion_comprador) {
-                '04' => 'digits:13',
-                '05' => 'digits:10',
+                '04' => new RucEcuatoriano,
+                '05' => new CedulaEcuatoriana,
                 '07' => 'in:'.config('sri.identificacion_consumidor_final'),
                 default => 'max:20',
             }],
@@ -203,22 +207,11 @@ class FacturaForm extends Component
             'lineas.*.codigo_auxiliar' => ['nullable', 'string', 'max:25'],
             'lineas.*.descripcion' => ['required', 'string', 'max:300'],
             'lineas.*.detalle_adicional' => ['nullable', 'string', 'max:300'],
-            'lineas.*.cantidad' => ['required', 'numeric', 'min:0.01'],
-            'lineas.*.precio_unitario' => ['required', 'numeric', 'min:0'],
-            'lineas.*.subsidio' => ['required', 'numeric', 'min:0', function ($attribute, $value, $fail) {
-                $linea = $this->lineas[explode('.', $attribute)[1]];
-                if ((float) $value > (float) ($linea['precio_unitario'] ?? 0)) {
-                    $fail('El subsidio no puede superar el precio unitario.');
-                }
-            }],
-            'lineas.*.descuento' => ['required', 'numeric', 'min:0', function ($attribute, $value, $fail) {
-                $linea = $this->lineas[explode('.', $attribute)[1]];
-                $subtotal = (float) ($linea['cantidad'] ?? 0) * ((float) ($linea['precio_unitario'] ?? 0) - (float) ($linea['subsidio'] ?? 0));
-                if ((float) $value > $subtotal) {
-                    $fail('El descuento no puede superar el subtotal de la línea.');
-                }
-            }],
-            'lineas.*.tarifa' => ['required', 'numeric', 'in:0,5,8,15'],
+            'lineas.*.cantidad' => ['required', 'numeric', 'min:0.000001', 'decimal:0,6'],
+            'lineas.*.precio_unitario' => ['required', 'numeric', 'min:0', 'decimal:0,6'],
+            'lineas.*.subsidio' => ['required', 'numeric', 'min:0', 'decimal:0,6'],
+            'lineas.*.descuento' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
+            'lineas.*.codigo_porcentaje' => ['required', 'string', Rule::exists('tarifas_iva', 'codigo_porcentaje')->where('activo', true)],
         ], [], [
             'fecha_emision' => 'fecha de emisión',
             'razon_social_comprador' => 'razón social del comprador',
@@ -226,7 +219,7 @@ class FacturaForm extends Component
             'correo_comprador' => 'correo electrónico del comprador',
         ]);
 
-        if ($datos['tipo_identificacion_comprador'] === '07' && $accion->calcularTotales($datos['lineas'])['importeTotal'] > 50) {
+        if ($datos['tipo_identificacion_comprador'] === '07' && BigDecimal::of($accion->calcularTotales($datos['lineas'])['importeTotal'])->isGreaterThan('50.00')) {
             $this->addError('identificacion_comprador', 'Para importes mayores a 50 debe identificar al comprador.');
 
             return;

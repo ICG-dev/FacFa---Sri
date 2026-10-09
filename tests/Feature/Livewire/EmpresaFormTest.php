@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Livewire;
 
+use App\Actions\Empresas\GuardarEmpresaAction;
 use App\Livewire\Empresas\EmpresaForm;
 use App\Models\Empresa;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +21,7 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function el_super_admin_puede_crear_una_empresa_con_su_certificado(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         Storage::fake('local');
 
         $superAdmin = User::factory()->create(['empresa_id' => null]);
@@ -27,7 +29,7 @@ class EmpresaFormTest extends TestCase
 
         Livewire::actingAs($superAdmin)
             ->test(EmpresaForm::class)
-            ->set('ruc', '1792146739001')
+            ->set('ruc', '0190000000002')
             ->set('razon_social', 'NUEVA EMPRESA S.A.')
             ->set('dir_matriz', 'Av. Principal 123')
             ->set('establecimiento', '001')
@@ -38,7 +40,7 @@ class EmpresaFormTest extends TestCase
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $empresa = Empresa::where('ruc', '1792146739001')->first();
+        $empresa = Empresa::where('ruc', '0190000000002')->first();
 
         $this->assertNotNull($empresa);
         $this->assertNotNull($empresa->certificado_path);
@@ -49,23 +51,21 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function el_super_admin_puede_crear_una_empresa_sin_certificado(): void
     {
-        
-        
-        
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $superAdmin = User::factory()->create(['empresa_id' => null]);
         $superAdmin->assignRole('super_admin');
 
         Livewire::actingAs($superAdmin)
             ->test(EmpresaForm::class)
-            ->set('ruc', '1792146739001')
+            ->set('ruc', '0190000000002')
             ->set('razon_social', 'NUEVA EMPRESA S.A.')
             ->set('dir_matriz', 'Av. Principal 123')
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $empresa = Empresa::where('ruc', '1792146739001')->first();
+        $empresa = Empresa::where('ruc', '0190000000002')->first();
 
         $this->assertNotNull($empresa);
         $this->assertNull($empresa->certificado_path);
@@ -74,7 +74,7 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function el_admin_de_la_empresa_puede_subir_el_certificado_despues_desde_mi_empresa(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         Storage::fake('local');
 
         $empresa = Empresa::factory()->create(['certificado_path' => null, 'certificado_password' => null]);
@@ -98,7 +98,7 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function un_certificado_invalido_conserva_el_anterior_y_los_datos(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         Storage::fake('local');
         Storage::disk('local')->put('certificados/anterior.p12', 'anterior');
         $empresa = Empresa::factory()->create(['certificado_path' => 'certificados/anterior.p12']);
@@ -119,7 +119,7 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function admin_no_puede_cambiar_datos_fiscales_protegidos(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         $empresa = Empresa::factory()->create(['ambiente' => 1]);
         $admin = User::factory()->for($empresa)->create();
         $admin->assignRole('admin');
@@ -140,7 +140,7 @@ class EmpresaFormTest extends TestCase
     #[Test]
     public function ruc_duplicado_da_error_de_validacion(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         $empresa = Empresa::factory()->create();
         $admin = User::factory()->create();
         $admin->assignRole('super_admin');
@@ -161,7 +161,7 @@ class EmpresaFormTest extends TestCase
         });
 
         try {
-            app(\App\Actions\Empresas\GuardarEmpresaAction::class)->ejecutar($empresa, [], $certificado, 'clave');
+            app(GuardarEmpresaAction::class)->ejecutar($empresa, [], $certificado, 'clave');
             $this->fail('Se esperaba un fallo de guardado.');
         } catch (\RuntimeException $e) {
             $this->assertSame('Fallo de BD simulado', $e->getMessage());

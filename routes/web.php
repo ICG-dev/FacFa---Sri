@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DescargarRideController;
 use App\Livewire\DashboardView;
 use App\Livewire\Empresas\EmpresaForm;
 use App\Livewire\Empresas\EmpresaIndex;
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified'])->prefix('facturas')->name('facturas.')->
     Route::get('/', FacturaIndex::class)->name('index');
     Route::get('/crear', FacturaForm::class)->name('create');
     Route::get('/{factura}/editar', FacturaForm::class)->name('edit');
+    Route::get('/{factura}/ride', DescargarRideController::class)->name('ride');
     Route::get('/{factura}', FacturaShow::class)->name('show');
 });
 

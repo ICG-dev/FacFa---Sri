@@ -3,10 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Empresa;
+use App\Models\TarifaIva;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
-
-
 
 class ProductoFactory extends Factory
 {
@@ -19,6 +17,8 @@ class ProductoFactory extends Factory
             'precio_unitario' => fake()->randomFloat(2, 1, 500),
             'codigo_impuesto' => 2,
             'tarifa' => 15,
+            'codigo_porcentaje' => fn (array $atributos) => TarifaIva::query()
+                ->where('porcentaje', $atributos['tarifa'])->orderBy('codigo_porcentaje')->value('codigo_porcentaje'),
         ];
     }
 }

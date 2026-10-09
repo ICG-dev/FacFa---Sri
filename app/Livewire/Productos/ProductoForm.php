@@ -4,6 +4,7 @@ namespace App\Livewire\Productos;
 
 use App\Actions\Productos\GuardarProductoAction;
 use App\Models\Producto;
+use App\Models\TarifaIva;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -17,12 +18,11 @@ class ProductoForm extends Component
 
     public string $precio_unitario = '';
 
-    public string $tarifa = '15';
+    public string $codigo_porcentaje = '4';
 
     public function mount(?Producto $producto = null): void
     {
-        
-        
+
         if ($producto && $producto->exists) {
             $this->authorize('update', $producto);
 
@@ -30,7 +30,7 @@ class ProductoForm extends Component
             $this->codigo_principal = $producto->codigo_principal;
             $this->descripcion = $producto->descripcion;
             $this->precio_unitario = (string) $producto->precio_unitario;
-            $this->tarifa = (string) $producto->tarifa;
+            $this->codigo_porcentaje = $producto->codigo_porcentaje;
 
             return;
         }
@@ -50,8 +50,8 @@ class ProductoForm extends Component
                     ->ignore($this->producto?->id),
             ],
             'descripcion' => ['required', 'string', 'max:300'],
-            'precio_unitario' => ['required', 'numeric', 'min:0'],
-            'tarifa' => ['required', 'numeric', 'in:0,15'],
+            'precio_unitario' => ['required', 'numeric', 'min:0', 'decimal:0,6'],
+            'codigo_porcentaje' => ['required', 'string', Rule::exists('tarifas_iva', 'codigo_porcentaje')->where('activo', true)],
         ]);
 
         if ($this->producto) {
@@ -65,6 +65,11 @@ class ProductoForm extends Component
         session()->flash('status', __('Producto guardado correctamente.'));
 
         $this->redirectRoute('productos.index', navigate: true);
+    }
+
+    public function getTarifasIvaProperty()
+    {
+        return TarifaIva::activas()->orderBy('porcentaje')->orderBy('codigo_porcentaje')->get();
     }
 
     public function render()

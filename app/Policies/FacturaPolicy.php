@@ -28,6 +28,12 @@ class FacturaPolicy
             && $user->hasAnyRole(['facturador', 'contador', 'admin']);
     }
 
+    public function descargarRide(User $user, Factura $factura): bool
+    {
+        return $this->view($user, $factura)
+            && in_array($factura->estado, [Factura::ESTADO_AUTORIZADA, Factura::ESTADO_ANULADA], true);
+    }
+
     public function create(User $user): bool
     {
         return $user->hasAnyRole(['facturador', 'admin']);
