@@ -4,7 +4,6 @@ namespace App\Services\Sri;
 
 use App\Models\Empresa;
 use SoapClient;
-use SoapVar;
 
 
 
@@ -19,7 +18,7 @@ class SriRecepcionClient
     {
         $cliente = $this->clienteSoap($empresa, $ambiente);
 
-        $respuesta = $cliente->validarComprobante(new SoapVar($xmlFirmado, XSD_BASE64BINARY));
+        $respuesta = $cliente->validarComprobante(['xml' => $xmlFirmado]);
         $resultado = $respuesta->RespuestaRecepcionComprobante ?? $respuesta;
 
         $mensajes = [];

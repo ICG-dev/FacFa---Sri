@@ -90,7 +90,7 @@ class EmpresaForm extends Component
             'certificado_password' => [Rule::requiredIf(fn () => (bool) $this->certificado), 'nullable', 'string'],
         ]);
 
-        $accion->ejecutar(
+        $empresa = $accion->ejecutar(
             $this->empresa,
             [
                 'ruc' => $datos['ruc'],
@@ -109,7 +109,11 @@ class EmpresaForm extends Component
 
         session()->flash('status', __('Empresa guardada correctamente.'));
 
-        $this->redirectRoute('empresas.index', navigate: true);
+        if (auth()->user()->can('viewAny', Empresa::class)) {
+            $this->redirectRoute('empresas.index', navigate: true);
+        } else {
+            $this->redirectRoute('empresas.edit', $empresa, navigate: true);
+        }
     }
 
     public function render()

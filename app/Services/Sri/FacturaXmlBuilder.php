@@ -18,7 +18,7 @@ class FacturaXmlBuilder
 
         $root = $doc->createElement('factura');
         $root->setAttribute('id', 'comprobante');
-        $root->setAttribute('version', '1.1.0');
+        $root->setAttribute('version', '2.1.0');
         $doc->appendChild($root);
 
         $root->appendChild($this->infoTributaria($doc, $factura, $empresa));
@@ -57,6 +57,11 @@ class FacturaXmlBuilder
         $info = $doc->createElement('infoFactura');
 
         $this->append($doc, $info, 'fechaEmision', $factura->fecha_emision->format('d/m/Y'));
+
+        $dirEst = $empresa->dir_establecimiento ?? $empresa->dir_matriz;
+        if ($dirEst) {
+            $this->append($doc, $info, 'dirEstablecimiento', $dirEst);
+        }
 
         if ($empresa->contribuyente_especial) {
             $this->append($doc, $info, 'contribuyenteEspecial', $empresa->contribuyente_especial);

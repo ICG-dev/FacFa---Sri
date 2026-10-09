@@ -119,13 +119,17 @@ class FacturaForm extends Component
             return;
         }
 
-        $texto = addcslashes($texto, '%_\\');
+        $texto = strtr($texto, [
+            '!' => '!!',
+            '%' => '!%',
+            '_' => '!_',
+        ]);
 
         $this->sugerenciasProductos[$indice] = Producto::query()
             ->where('empresa_id', auth()->user()->empresa_id)
             ->where(fn ($query) => $query
-                ->whereRaw("codigo_principal like ? ESCAPE '\\'", ["%{$texto}%"])
-                ->orWhereRaw("descripcion like ? ESCAPE '\\'", ["%{$texto}%"]))
+                ->whereRaw("codigo_principal like ? ESCAPE '!'", ["%{$texto}%"])
+                ->orWhereRaw("descripcion like ? ESCAPE '!'", ["%{$texto}%"]))
             ->orderBy('descripcion')
             ->limit(6)
             ->get();

@@ -50,8 +50,12 @@ class FacturaIndex extends Component
 
     private function mensajeAmigable(\Throwable $e): string
     {
-        if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'certificado .p12')) {
+        if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'no tiene un certificado .p12')) {
             return __('Tu empresa todavía no tiene un certificado de firma electrónica configurado. Pedile al admin de tu empresa que lo suba desde "Mi empresa" antes de confirmar facturas.');
+        }
+
+        if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'No se pudo leer el certificado')) {
+            return __('No se pudo leer el certificado de firma electrónica de tu empresa: la contraseña es inválida o el archivo está dañado. Pedile al admin de tu empresa que lo vuelva a subir desde "Mi empresa".');
         }
 
         return __('No se pudo confirmar la factura. Intentá de nuevo en unos minutos; si el problema sigue, avisale al administrador.');

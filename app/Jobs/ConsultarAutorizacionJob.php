@@ -38,7 +38,7 @@ class ConsultarAutorizacionJob implements ShouldQueue
 
         match ($respuesta['estado']) {
             'AUTORIZADO' => $this->marcarAutorizada($respuesta),
-            'NO AUTORIZADO', 'RECHAZADO' => $this->marcarRechazada($respuesta),
+            'NO AUTORIZADO', 'RECHAZADO', 'RECHAZADA' => $this->marcarRechazada($respuesta),
             default => $this->reintentarOExpirar(),
         };
     }

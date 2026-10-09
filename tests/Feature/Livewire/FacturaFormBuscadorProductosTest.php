@@ -85,5 +85,9 @@ class FacturaFormBuscadorProductosTest extends TestCase
         $this->assertSame([$literal->id], $form->get('sugerenciasProductos')[0]->pluck('id')->all());
         $form->set('lineas.0.codigo_principal', '_%');
         $this->assertSame([$literal->id], $form->get('sugerenciasProductos')[0]->pluck('id')->all());
+
+        $conSigno = Producto::factory()->for($empresa)->create(['codigo_principal' => 'P!_01', 'descripcion' => 'Con signo']);
+        $form->set('lineas.0.codigo_principal', '!_');
+        $this->assertSame([$conSigno->id], $form->get('sugerenciasProductos')[0]->pluck('id')->all());
     }
 }

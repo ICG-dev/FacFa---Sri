@@ -38,7 +38,8 @@ class EmpresaFormTest extends TestCase
             ->set('certificado', $this->certificadoValido('clave-secreta'))
             ->set('certificado_password', 'clave-secreta')
             ->call('guardar')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertRedirect(route('empresas.index'));
 
         $empresa = Empresa::where('ruc', '0190000000002')->first();
 
@@ -63,7 +64,8 @@ class EmpresaFormTest extends TestCase
             ->set('razon_social', 'NUEVA EMPRESA S.A.')
             ->set('dir_matriz', 'Av. Principal 123')
             ->call('guardar')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertRedirect(route('empresas.index'));
 
         $empresa = Empresa::where('ruc', '0190000000002')->first();
 
@@ -93,6 +95,53 @@ class EmpresaFormTest extends TestCase
         $this->assertNotNull($empresa->certificado_path);
         Storage::disk('local')->assertExists($empresa->certificado_path);
         $this->assertSame('clave-de-la-empresa', $empresa->certificado_password);
+    }
+
+    #[Test]
+    public function el_admin_redirige_a_la_edicion_de_su_empresa_tras_guardar(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $empresa = Empresa::factory()->create();
+        $admin = User::factory()->create(['empresa_id' => $empresa->id]);
+        $admin->assignRole('admin');
+
+        Livewire::actingAs($admin)
+            ->test(EmpresaForm::class, ['empresa' => $empresa])
+            ->set('razon_social', 'EMPRESA ACTUALIZADA S.A.')
+            ->call('guardar')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('empresas.edit', $empresa));
+
+        $this->assertDatabaseHas('empresas', [
+            'id' => $empresa->id,
+            'razon_social' => 'EMPRESA ACTUALIZADA S.A.',
+        ]);
+        $this->assertSame(__('Empresa guardada correctamente.'), session('status'));
+        $this->actingAs($admin)->get(route('empresas.edit', $empresa))->assertOk();
+    }
+
+    #[Test]
+    public function el_super_admin_redirige_al_listado_tras_guardar_una_empresa(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $empresa = Empresa::factory()->create();
+        $superAdmin = User::factory()->create(['empresa_id' => null]);
+        $superAdmin->assignRole('super_admin');
+
+        Livewire::actingAs($superAdmin)
+            ->test(EmpresaForm::class, ['empresa' => $empresa])
+            ->set('razon_social', 'EMPRESA ACTUALIZADA S.A.')
+            ->call('guardar')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('empresas.index'));
+
+        $this->assertDatabaseHas('empresas', [
+            'id' => $empresa->id,
+            'razon_social' => 'EMPRESA ACTUALIZADA S.A.',
+        ]);
+        $this->assertSame(__('Empresa guardada correctamente.'), session('status'));
     }
 
     #[Test]
