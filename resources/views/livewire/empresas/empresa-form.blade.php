@@ -44,18 +44,21 @@
             <div>
                 <x-input-label for="establecimiento" :value="__('Establecimiento')" />
                 <x-text-input wire:model="establecimiento" id="establecimiento" type="text" maxlength="3" class="block w-full font-mono" />
+                <p class="text-[11px] text-muted-foreground mt-1">{{ __('Código de 3 dígitos asignado por el SRI (ej. 001).') }}</p>
                 <x-input-error :messages="$errors->get('establecimiento')" class="mt-2" />
             </div>
 
             <div>
                 <x-input-label for="punto_emision" :value="__('Punto de emisión')" />
                 <x-text-input wire:model="punto_emision" id="punto_emision" type="text" maxlength="3" class="block w-full font-mono" />
+                <p class="text-[11px] text-muted-foreground mt-1">{{ __('Código de 3 dígitos para el punto de facturación o caja (ej. 001).') }}</p>
                 <x-input-error :messages="$errors->get('punto_emision')" class="mt-2" />
             </div>
 
             <div>
                 <x-input-label for="contribuyente_especial" :value="__('N.º contribuyente especial (opcional)')" />
                 <x-text-input wire:model="contribuyente_especial" id="contribuyente_especial" type="text" class="block w-full font-mono" />
+                <p class="text-[11px] text-muted-foreground mt-1">{{ __('Número de resolución del SRI si aplica (dejar en blanco si no).') }}</p>
                 <x-input-error :messages="$errors->get('contribuyente_especial')" class="mt-2" />
             </div>
 
@@ -69,9 +72,16 @@
             <div>
                 <h3 class="text-sm font-semibold text-foreground">{{ __('Certificado de firma electrónica (.p12)') }}</h3>
                 @if ($empresa?->certificado_path)
-                    <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{{ __('Ya hay un certificado cargado. Solo subí uno nuevo si querés reemplazarlo.') }}</p>
+                    @php($vencimiento = $empresa->fechaExpiracionCertificado())
+                    @if ($vencimiento?->isPast())
+                        <p class="text-xs text-destructive mt-1">{{ __('El certificado cargado venció el :fecha. Sube un certificado vigente para poder emitir comprobantes.', ['fecha' => $vencimiento->format('d/m/Y')]) }}</p>
+                    @elseif ($vencimiento)
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{{ __('Ya hay un certificado cargado (vence el :fecha). Sube uno nuevo solo si quieres reemplazarlo.', ['fecha' => $vencimiento->format('d/m/Y')]) }}</p>
+                    @else
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{{ __('Ya hay un certificado cargado. Sube uno nuevo solo si quieres reemplazarlo.') }}</p>
+                    @endif
                 @elseif (! $empresa && auth()->user()->esSuperAdmin())
-                    <p class="text-xs text-muted-foreground mt-1">{{ __('Es opcional acá: podés dejarlo en blanco y que el propio admin de la empresa lo suba después desde "Mi empresa" — es material sensible de firma legal que la empresa no tiene por qué compartir con la plataforma.') }}</p>
+                    <p class="text-xs text-muted-foreground mt-1">{{ __('Es opcional aquí: puedes dejarlo en blanco y que el propio administrador de la empresa lo suba después desde "Mi empresa" — es material sensible de firma legal que la empresa no tiene por qué compartir con la plataforma.') }}</p>
                 @else
                     <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">{{ __('Sin certificado todavía: la empresa no podrá firmar ni enviar comprobantes hasta que subas uno.') }}</p>
                 @endif
@@ -86,7 +96,18 @@
 
             <div>
                 <x-input-label for="certificado_password" :value="__('Contraseña del certificado')" />
-                <x-text-input wire:model="certificado_password" id="certificado_password" type="password" class="block w-full" autocomplete="new-password" />
+                <div x-data="{ verPassword: false }" class="relative">
+                    <x-text-input wire:model="certificado_password" id="certificado_password" type="password" ::type="verPassword ? 'text' : 'password'" class="block w-full pr-10" autocomplete="new-password" />
+                    <button type="button" @click="verPassword = !verPassword" :title="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" :aria-label="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" :aria-pressed="verPassword" aria-controls="certificado_password" class="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-md">
+                        <svg x-show="!verPassword" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <svg x-show="verPassword" x-cloak class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18M10.5 5.4A11 11 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a19 19 0 0 1-3.1 3.9M6.4 6.4A20 20 0 0 0 2.25 12s3.75 6.75 9.75 6.75a12 12 0 0 0 5.6-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                        </svg>
+                    </button>
+                </div>
                 <x-input-error :messages="$errors->get('certificado_password')" class="mt-2" />
             </div>
         </section>

@@ -42,6 +42,7 @@ class XadesSignerTest extends TestCase
 
         $xpath = new \DOMXPath($doc);
         $xpath->registerNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
+        $xpath->registerNamespace('etsi', 'http://uri.etsi.org/01903/v1.3.2#');
 
         $references = $xpath->query('//ds:Signature/ds:SignedInfo/ds:Reference');
         $this->assertSame(3, $references->length);
@@ -65,9 +66,27 @@ class XadesSignerTest extends TestCase
                 $sinFirma->documentElement->removeChild($hijo);
             }
         }
-        $digestEsperado = base64_encode(sha1($sinFirma->documentElement->C14N(false, false), true));
-        $digestComprobanteReal = $references->item(2)->getElementsByTagNameNS('http://www.w3.org/2000/09/xmldsig#', 'DigestValue')->item(0)->textContent;
-        $this->assertSame($digestEsperado, $digestComprobanteReal);
+
+        $c14nDigest = fn (\DOMNode $n) => base64_encode(sha1($n->C14N(false, false), true));
+        $esperados = [
+            '#'.$xpath->evaluate('string(//etsi:SignedProperties/@Id)') => $c14nDigest($xpath->query('//etsi:SignedProperties')->item(0)),
+            '#'.$xpath->evaluate('string(//ds:KeyInfo/@Id)') => $c14nDigest($xpath->query('//ds:KeyInfo')->item(0)),
+            '#comprobante' => $c14nDigest($sinFirma->documentElement),
+        ];
+
+        $this->assertCount(3, $esperados);
+        foreach ($references as $reference) {
+            $uri = $reference->getAttribute('URI');
+            $this->assertArrayHasKey($uri, $esperados);
+            $real = $xpath->evaluate('string(ds:DigestValue)', $reference);
+            $this->assertSame($esperados[$uri], $real, "Digest incorrecto para {$uri}");
+        }
+
+        foreach (['//ds:SignedInfo', '//ds:KeyInfo', '//etsi:SignedProperties'] as $q) {
+            $c14n = $xpath->query($q)->item(0)->C14N(false, false);
+            $this->assertStringContainsString('xmlns:ds="http://www.w3.org/2000/09/xmldsig#"', $c14n);
+            $this->assertStringContainsString('xmlns:etsi="http://uri.etsi.org/01903/v1.3.2#"', $c14n);
+        }
     }
 
     

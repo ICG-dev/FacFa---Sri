@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DescargarRideController;
+use App\Http\Controllers\DescargarXmlController;
 use App\Livewire\DashboardView;
 use App\Livewire\Empresas\EmpresaForm;
 use App\Livewire\Empresas\EmpresaIndex;
@@ -25,12 +26,15 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::redirect('/facturas/nueva', '/facturas/crear');
+
 Route::middleware(['auth', 'verified'])->prefix('facturas')->name('facturas.')->group(function () {
     Route::get('/', FacturaIndex::class)->name('index');
     Route::get('/crear', FacturaForm::class)->name('create');
-    Route::get('/{factura}/editar', FacturaForm::class)->name('edit');
-    Route::get('/{factura}/ride', DescargarRideController::class)->name('ride');
-    Route::get('/{factura}', FacturaShow::class)->name('show');
+    Route::get('/{factura}/editar', FacturaForm::class)->name('edit')->whereNumber('factura');
+    Route::get('/{factura}/ride', DescargarRideController::class)->name('ride')->whereNumber('factura');
+    Route::get('/{factura}/xml', DescargarXmlController::class)->name('xml')->whereNumber('factura');
+    Route::get('/{factura}', FacturaShow::class)->name('show')->whereNumber('factura');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('admin/empresas')->name('empresas.')->group(function () {

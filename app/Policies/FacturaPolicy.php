@@ -34,6 +34,13 @@ class FacturaPolicy
             && in_array($factura->estado, [Factura::ESTADO_AUTORIZADA, Factura::ESTADO_ANULADA], true);
     }
 
+    public function descargarXml(User $user, Factura $factura): bool
+    {
+        return $this->view($user, $factura)
+            && (in_array($factura->estado, [Factura::ESTADO_AUTORIZADA, Factura::ESTADO_ANULADA], true)
+                || $factura->xml_autorizado || $factura->xml_firmado || $factura->xml_generado);
+    }
+
     public function create(User $user): bool
     {
         return $user->hasAnyRole(['facturador', 'admin']);
@@ -44,13 +51,22 @@ class FacturaPolicy
 
     public function update(User $user, Factura $factura): bool
     {
-        return $this->esBorradorPropioDeLaEmpresa($user, $factura)
-            && $user->hasAnyRole(['facturador', 'admin']);
+        return $user->empresa_id === $factura->empresa_id
+            && $user->hasAnyRole(['facturador', 'admin'])
+            && ($user->hasRole('admin') || $factura->user_id === $user->id)
+            && in_array($factura->estado, [Factura::ESTADO_BORRADOR, Factura::ESTADO_DEVUELTA, Factura::ESTADO_RECHAZADA], true);
+    }
+
+    public function reabrirBorrador(User $user, Factura $factura): bool
+    {
+        return in_array($factura->estado, [Factura::ESTADO_DEVUELTA, Factura::ESTADO_RECHAZADA], true)
+            && $this->update($user, $factura);
     }
 
     public function delete(User $user, Factura $factura): bool
     {
-        return $this->update($user, $factura);
+        return $this->esBorradorPropioDeLaEmpresa($user, $factura)
+            && $user->hasAnyRole(['facturador', 'admin']);
     }
 
     
@@ -58,7 +74,8 @@ class FacturaPolicy
 
     public function confirmar(User $user, Factura $factura): bool
     {
-        return $this->update($user, $factura);
+        return $this->esBorradorPropioDeLaEmpresa($user, $factura)
+            && $user->hasAnyRole(['facturador', 'admin']);
     }
 
     
@@ -66,7 +83,8 @@ class FacturaPolicy
 
     public function anularBorrador(User $user, Factura $factura): bool
     {
-        return $this->update($user, $factura);
+        return $this->esBorradorPropioDeLaEmpresa($user, $factura)
+            && $user->hasAnyRole(['facturador', 'admin']);
     }
 
     

@@ -44,6 +44,8 @@ class FacturaForm extends Component
 
     public array $sugerenciasProductos = [];
 
+    public ?string $identificacionAutocompletada = null;
+
     public function mount(?Factura $factura = null): void
     {
 
@@ -102,6 +104,60 @@ class FacturaForm extends Component
         unset($this->lineas[$indice]);
         $this->lineas = array_values($this->lineas);
         unset($this->sugerenciasProductos[$indice]);
+    }
+
+    public function updatedTipoIdentificacionComprador(string $tipo): void
+    {
+        if ($tipo === '07') {
+            $this->identificacion_comprador = '9999999999999';
+            $this->razon_social_comprador = 'CONSUMIDOR FINAL';
+            $this->identificacionAutocompletada = null;
+        } elseif ($this->identificacion_comprador === '9999999999999') {
+            $this->identificacion_comprador = '';
+            $this->razon_social_comprador = '';
+        }
+    }
+
+    public function updatedIdentificacionComprador(string $identificacion): void
+    {
+        $identificacion = trim($identificacion);
+
+        if ($this->identificacionAutocompletada !== null && $this->identificacionAutocompletada !== $identificacion) {
+            $this->razon_social_comprador = '';
+            $this->direccion_comprador = '';
+            $this->telefono_comprador = '';
+            $this->correo_comprador = '';
+            $this->identificacionAutocompletada = null;
+        }
+
+        if (mb_strlen($identificacion) < 10) {
+            return;
+        }
+
+        $historica = Factura::query()
+            ->where('empresa_id', auth()->user()->empresa_id)
+            ->where('identificacion_comprador', $identificacion)
+            ->latest('id')
+            ->first();
+
+        if (! $historica) {
+            return;
+        }
+
+        $this->identificacionAutocompletada = $identificacion;
+
+        if (blank($this->razon_social_comprador) || $this->razon_social_comprador === 'CONSUMIDOR FINAL') {
+            $this->razon_social_comprador = $historica->razon_social_comprador;
+        }
+        if (blank($this->direccion_comprador)) {
+            $this->direccion_comprador = $historica->direccion_comprador ?? '';
+        }
+        if (blank($this->telefono_comprador)) {
+            $this->telefono_comprador = $historica->telefono_comprador ?? '';
+        }
+        if (blank($this->correo_comprador)) {
+            $this->correo_comprador = $historica->correo_comprador ?? '';
+        }
     }
 
     public function updated(string $name): void

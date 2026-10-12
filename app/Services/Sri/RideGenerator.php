@@ -69,6 +69,34 @@ class RideGenerator
             }
         }
 
+        $totales = [];
+        $ivaPorTarifa = [];
+        $otros = ['3' => BigDecimal::of('0.00'), '5' => BigDecimal::of('0.00')];
+        foreach ($impuestos as $clave => $impuesto) {
+            if ($impuesto['codigo'] === '2' && ! in_array($clave, ['2|0', '2|6', '2|7'], true)) {
+                $etiqueta = str_replace('.00%', '%', $impuesto['etiqueta']);
+                $totales[] = ['etiqueta' => str_replace('IVA ', 'SUBTOTAL ', $etiqueta), 'valor' => $impuesto['base']];
+                $ivaPorTarifa[] = ['etiqueta' => $etiqueta, 'valor' => $impuesto['valor']];
+            } elseif (isset($otros[$impuesto['codigo']])) {
+                $otros[$impuesto['codigo']] = $otros[$impuesto['codigo']]->plus($impuesto['valor']);
+            }
+        }
+        foreach (['2|0' => 'SUBTOTAL 0%', '2|6' => 'SUBTOTAL NO OBJETO DE IVA', '2|7' => 'SUBTOTAL EXENTO DE IVA'] as $clave => $etiqueta) {
+            $totales[] = ['etiqueta' => $etiqueta, 'valor' => $impuestos[$clave]['base'] ?? '0.00'];
+        }
+        $totales[] = ['etiqueta' => 'SUBTOTAL SIN IMPUESTOS', 'valor' => $factura->total_sin_impuestos];
+        $totales[] = ['etiqueta' => 'TOTAL DESCUENTO', 'valor' => $factura->total_descuento];
+        $totales[] = ['etiqueta' => 'ICE', 'valor' => (string) $otros['3']->toScale(2)];
+        $totales = array_merge($totales, $ivaPorTarifa ?: [['etiqueta' => 'IVA 0%', 'valor' => '0.00']]);
+        $totales[] = ['etiqueta' => 'IRBPNR', 'valor' => (string) $otros['5']->toScale(2)];
+        $totales[] = ['etiqueta' => 'PROPINA', 'valor' => $this->valorXml($xml, '/factura/infoFactura/propina') ?? '0.00'];
+        $totales[] = ['etiqueta' => 'VALOR TOTAL', 'valor' => $factura->importe_total];
+
+        $adicionales = [];
+        foreach ($xml?->query('/factura/infoAdicional/campoAdicional') ?? [] as $campo) {
+            $adicionales[] = ['nombre' => $campo->getAttribute('nombre'), 'valor' => $campo->textContent];
+        }
+
         $formaPago = FormaPago::where('codigo', $factura->forma_pago)->first();
         $codigoPago = str_pad((string) $factura->forma_pago, 2, '0', STR_PAD_LEFT);
         $tipoEmision = $this->valorXml($xml, '/factura/infoTributaria/tipoEmision')
@@ -93,6 +121,9 @@ class RideGenerator
             },
             'impuestos' => $impuestos,
             'iva_total' => (string) $iva->toScale(2),
+            'totales' => $totales,
+            'adicionales' => $adicionales,
+            'placa' => $this->valorXml($xml, '/factura/infoFactura/placa'),
             'pagos' => [[
                 'codigo' => $codigoPago,
                 'descripcion' => $formaPago?->descripcion ?? 'Forma de pago '.$codigoPago,
@@ -110,6 +141,7 @@ class RideGenerator
         $matriz = $this->valorXml($xml, '/factura/infoTributaria/dirMatriz') ?? $empresa->dir_matriz;
 
         return [
+            'rimpe' => $this->valorXml($xml, '/factura/infoTributaria/contribuyenteRimpe'),
             'ruc' => $this->valorXml($xml, '/factura/infoTributaria/ruc') ?? $empresa->ruc,
             'razon_social' => $this->valorXml($xml, '/factura/infoTributaria/razonSocial') ?? $empresa->razon_social,
             'nombre_comercial' => $this->valorXml($xml, '/factura/infoTributaria/nombreComercial') ?? $empresa->nombre_comercial,
@@ -123,7 +155,7 @@ class RideGenerator
 
     private function xmlGuardado(Factura $factura): ?DOMXPath
     {
-        $contenido = $factura->xml_autorizado ?: $factura->xml_generado ?: $factura->xml_firmado;
+        $contenido = $factura->xml_autorizado ?: $factura->xml_firmado ?: $factura->xml_generado;
 
         if (! $contenido) {
             return null;

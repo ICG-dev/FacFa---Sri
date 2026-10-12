@@ -24,6 +24,8 @@ class GuardarBorradorFacturaAction
                 'total_descuento' => $totales['totalDescuento'],
                 'importe_total' => $totales['importeTotal'],
             ]);
+            $facturaModel->estado = Factura::ESTADO_BORRADOR;
+            $facturaModel->mensajes_error = null;
             $facturaModel->save();
             $facturaModel->detalles()->delete();
             $facturaModel->detalles()->createMany($calculo['detalles']);
