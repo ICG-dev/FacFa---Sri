@@ -4,24 +4,24 @@
     </h1>
 </x-slot>
 
-<div class="max-w-xl">
+<div class="max-w-2xl">
     <form wire:submit="guardar" class="bg-card text-card-foreground border border-border rounded-lg p-6 space-y-6">
 
         <div>
             <x-input-label for="name" :value="__('Nombre')" />
-            <x-text-input wire:model="name" id="name" type="text" class="block w-full" autofocus />
+            <x-text-input wire:model="name" id="name" type="text" class="block w-full" placeholder="Ej. Carlos Mendoza" autofocus />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" type="email" class="block w-full" />
+            <x-text-input wire:model="email" id="email" type="email" class="block w-full" placeholder="carlos@empresa.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <div>
             <x-input-label for="password" :value="$usuario ? __('Nueva contraseña (dejar en blanco para no cambiarla)') : __('Contraseña')" />
-            <x-text-input wire:model="password" id="password" type="password" class="block w-full" autocomplete="new-password" />
+            <x-text-input wire:model="password" id="password" type="password" class="block w-full" placeholder="••••••••" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 

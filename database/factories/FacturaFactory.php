@@ -7,9 +7,6 @@ use App\Models\Factura;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-
-
-
 class FacturaFactory extends Factory
 {
     public function definition(): array
@@ -20,7 +17,7 @@ class FacturaFactory extends Factory
             'estado' => Factura::ESTADO_BORRADOR,
             'fecha_emision' => now()->toDateString(),
             'tipo_identificacion_comprador' => '05',
-            'identificacion_comprador' => fake()->numerify('##########'),
+            'identificacion_comprador' => '0100000009',
             'razon_social_comprador' => fake()->name(),
             'direccion_comprador' => fake()->address(),
             'total_sin_impuestos' => 100,

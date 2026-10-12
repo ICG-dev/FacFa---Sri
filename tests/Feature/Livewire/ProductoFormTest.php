@@ -6,6 +6,7 @@ use App\Livewire\Productos\ProductoForm;
 use App\Models\Empresa;
 use App\Models\Producto;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,7 +19,7 @@ class ProductoFormTest extends TestCase
     #[Test]
     public function el_admin_puede_crear_un_producto_en_su_catalogo(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $empresa = Empresa::factory()->create();
         $admin = User::factory()->create(['empresa_id' => $empresa->id]);
@@ -29,7 +30,7 @@ class ProductoFormTest extends TestCase
             ->set('codigo_principal', 'MESA-01')
             ->set('descripcion', 'Mesa de centro')
             ->set('precio_unitario', '120.00')
-            ->set('tarifa', '15')
+            ->set('codigo_porcentaje', '4')
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -42,7 +43,7 @@ class ProductoFormTest extends TestCase
     #[Test]
     public function no_se_puede_repetir_un_codigo_dentro_de_la_misma_empresa(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $empresa = Empresa::factory()->create();
         $admin = User::factory()->create(['empresa_id' => $empresa->id]);
@@ -55,7 +56,7 @@ class ProductoFormTest extends TestCase
             ->set('codigo_principal', 'MESA-01')
             ->set('descripcion', 'Otra mesa')
             ->set('precio_unitario', '80')
-            ->set('tarifa', '15')
+            ->set('codigo_porcentaje', '4')
             ->call('guardar')
             ->assertHasErrors(['codigo_principal']);
     }
@@ -63,7 +64,7 @@ class ProductoFormTest extends TestCase
     #[Test]
     public function el_mismo_codigo_si_se_permite_en_empresas_distintas(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $otraEmpresa = Empresa::factory()->create();
         Producto::factory()->for($otraEmpresa)->create(['codigo_principal' => 'MESA-01']);
@@ -77,7 +78,7 @@ class ProductoFormTest extends TestCase
             ->set('codigo_principal', 'MESA-01')
             ->set('descripcion', 'Mesa de centro')
             ->set('precio_unitario', '120')
-            ->set('tarifa', '15')
+            ->set('codigo_porcentaje', '4')
             ->call('guardar')
             ->assertHasNoErrors();
 

@@ -23,7 +23,7 @@ class SriAutorizacionClient
     {
         $cliente = $this->clienteSoap($empresa, $ambiente);
 
-        $respuesta = $cliente->autorizacionComprobante($claveAcceso);
+        $respuesta = $cliente->autorizacionComprobante(['claveAccesoComprobante' => $claveAcceso]);
         $resultado = $respuesta->RespuestaAutorizacionComprobante ?? $respuesta;
 
         $autorizaciones = $resultado->autorizaciones->autorizacion ?? null;
@@ -51,6 +51,7 @@ class SriAutorizacionClient
             $mensajes[] = [
                 'identificador' => $mensaje->identificador ?? null,
                 'mensaje' => $mensaje->mensaje ?? '',
+                'informacionAdicional' => $mensaje->informacionAdicional ?? null,
                 'tipo' => $mensaje->tipo ?? null,
             ];
         }

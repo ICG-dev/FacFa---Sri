@@ -91,3 +91,5 @@ build/
 /bootstrap/cache/**
 !/bootstrap/cache/**/
 !/bootstrap/cache/**/.gitignore
+
+docs

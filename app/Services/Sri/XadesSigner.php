@@ -109,7 +109,9 @@ class XadesSigner
 
         $refComprobante['digestValue']->nodeValue = $this->digestComprobanteEnveloped($doc, $signature);
         $refSignedProperties['digestValue']->nodeValue = $this->digestC14N($signedProperties);
-        $refCertificado['digestValue']->nodeValue = base64_encode(sha1($certificadoDer, true));
+        $refCertificado['digestValue']->nodeValue = $this->digestC14N(
+            $signature->getElementsByTagNameNS(self::NS_DS, 'KeyInfo')->item(0)
+        );
 
         $key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA1, ['type' => 'private']);
         $key->loadKey($llavePrivadaPem);
@@ -122,6 +124,7 @@ class XadesSigner
     {
         $signedInfo = $doc->createElementNS(self::NS_DS, 'ds:SignedInfo');
         $signedInfo->setAttribute('Id', "{$signatureId}-SignedInfo".random_int(100000, 999999));
+        $this->declararNamespaces($signedInfo);
 
         $c14n = $doc->createElementNS(self::NS_DS, 'ds:CanonicalizationMethod');
         $c14n->setAttribute('Algorithm', self::C14N_ALGORITHM);
@@ -211,6 +214,7 @@ class XadesSigner
     {
         $keyInfo = $doc->createElementNS(self::NS_DS, 'ds:KeyInfo');
         $keyInfo->setAttribute('Id', $certificateId);
+        $this->declararNamespaces($keyInfo);
 
         $x509Data = $doc->createElementNS(self::NS_DS, 'ds:X509Data');
         $x509Certificate = $doc->createElementNS(self::NS_DS, 'ds:X509Certificate');
@@ -247,6 +251,7 @@ class XadesSigner
     ): DOMElement {
         $signedProperties = $doc->createElementNS(self::NS_ETSI, 'etsi:SignedProperties');
         $signedProperties->setAttribute('Id', $signedPropertiesId);
+        $this->declararNamespaces($signedProperties);
 
         $signedSignatureProperties = $doc->createElementNS(self::NS_ETSI, 'etsi:SignedSignatureProperties');
 
@@ -344,6 +349,13 @@ class XadesSigner
         }
 
         return base64_encode(sha1($copia->documentElement->C14N(false, false), true));
+    }
+
+    /** Declara ds y etsi en el propio elemento para que su C14N sea autocontenido. */
+    private function declararNamespaces(DOMElement $element): void
+    {
+        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', self::NS_DS);
+        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:etsi', self::NS_ETSI);
     }
 
     private function digestC14N(DOMElement $element): string

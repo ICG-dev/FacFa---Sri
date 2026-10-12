@@ -12,8 +12,32 @@
 <div class="max-w-4xl space-y-6" @if($debeSondear) wire:poll.5s="refrescar" @endif>
 
             <div class="bg-card text-card-foreground border border-border rounded-lg p-6 space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <x-factura-estado-badge :estado="$factura->estado" class="text-sm px-3 py-1" />
+
+                    @can('reabrirBorrador', $factura)
+                        <x-secondary-button type="button" wire:click="reabrirBorrador">
+                            {{ __('Editar / Reabrir borrador') }}
+                        </x-secondary-button>
+                    @endcan
+
+                    @can('descargarRide', $factura)
+                        <a href="{{ route('facturas.ride', $factura) }}" class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                            {{ __('Descargar RIDE') }}
+                        </a>
+                    @endcan
+
+
+                    @can('descargarXml', $factura)
+                        @if ($factura->xml_autorizado || $factura->xml_firmado || $factura->xml_generado)
+                            <x-secondary-button type="button" wire:click="verXmlModal">
+                                {{ __('Ver XML') }}
+                            </x-secondary-button>
+                            <a href="{{ route('facturas.xml', ['factura' => $factura, 'download' => 1]) }}" class="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">
+                                {{ __('Descargar XML') }}
+                            </a>
+                        @endif
+                    @endcan
 
                     @if ($debeSondear)
                         <span class="text-xs text-muted-foreground flex items-center gap-1">
@@ -58,7 +82,15 @@
                         <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-2">{{ __('Mensajes del SRI') }}</p>
                         <ul class="text-sm text-amber-700 dark:text-amber-400 space-y-1 list-disc list-inside">
                             @foreach ($factura->mensajes_error as $mensaje)
-                                <li>{{ $mensaje['mensaje'] ?? json_encode($mensaje) }}</li>
+                                <li>
+                                    @if (! empty($mensaje['identificador']))
+                                        <span class="font-mono text-xs">[{{ $mensaje['identificador'] }}]</span>
+                                    @endif
+                                    <span>{{ $mensaje['mensaje'] ?? json_encode($mensaje) }}</span>
+                                    @if (! empty($mensaje['informacionAdicional']))
+                                        <span class="block text-xs opacity-80 mt-0.5">— {{ $mensaje['informacionAdicional'] }}</span>
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
                     </div>
@@ -112,4 +144,7 @@
                     </tbody>
                 </table>
             </div>
+    @if ($mostrarXmlModal)
+        <x-factura-xml-modal :factura="$factura" :xml="$this->xmlContenido" />
+    @endif
 </div>

@@ -37,7 +37,8 @@ class DashboardViewTest extends TestCase
         $response = $this->actingAs($usuario)->get(route('dashboard'));
 
         $response->assertOk()
-            ->assertSee('Enviadas al SRI')
+            ->assertSee('Pendientes')
+            ->assertSee('Rechazadas')
             ->assertSee('CLIENTE DE PRUEBA');
     }
 

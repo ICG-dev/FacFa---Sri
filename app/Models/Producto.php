@@ -16,14 +16,20 @@ class Producto extends Model
         'descripcion',
         'precio_unitario',
         'codigo_impuesto',
+        'codigo_porcentaje',
         'tarifa',
     ];
 
     protected $casts = [
-        'precio_unitario' => 'decimal:2',
+        'precio_unitario' => 'decimal:6',
         'codigo_impuesto' => 'integer',
         'tarifa' => 'decimal:2',
     ];
+
+    public function tarifaIva(): BelongsTo
+    {
+        return $this->belongsTo(TarifaIva::class, 'codigo_porcentaje', 'codigo_porcentaje');
+    }
 
     public function empresa(): BelongsTo
     {

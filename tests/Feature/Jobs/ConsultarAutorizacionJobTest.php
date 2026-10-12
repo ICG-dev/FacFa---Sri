@@ -73,6 +73,31 @@ class ConsultarAutorizacionJobTest extends TestCase
     }
 
     #[Test]
+    public function rechazada_del_ws_marca_rechazada_y_no_reencola(): void
+    {
+        Bus::fake([ConsultarAutorizacionJob::class]);
+        $factura = $this->facturaEnviada();
+
+        $mensajes = [['identificador' => '80', 'mensaje' => 'ERROR EN LA ESTRUCTURA DE LA CLAVE DE ACCESO', 'tipo' => 'ERROR']];
+
+        $cliente = Mockery::mock(SriAutorizacionClient::class);
+        $cliente->shouldReceive('consultar')->once()->andReturn([
+            'estado' => 'RECHAZADA',
+            'numeroAutorizacion' => null,
+            'fechaAutorizacion' => null,
+            'xmlAutorizado' => null,
+            'mensajes' => $mensajes,
+        ]);
+
+        (new ConsultarAutorizacionJob($factura))->handle($cliente);
+
+        Bus::assertNotDispatched(ConsultarAutorizacionJob::class);
+        $factura->refresh();
+        $this->assertSame(Factura::ESTADO_RECHAZADA, $factura->estado);
+        $this->assertSame($mensajes, $factura->mensajes_error);
+    }
+
+    #[Test]
     public function en_proceso_reintenta_con_backoff_dentro_del_plazo_maximo(): void
     {
         Bus::fake([ConsultarAutorizacionJob::class]);

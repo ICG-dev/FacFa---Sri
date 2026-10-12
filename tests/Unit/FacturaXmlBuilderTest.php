@@ -21,7 +21,7 @@ class FacturaXmlBuilderTest extends TestCase
     {
         $empresa = Empresa::factory()->create();
         $usuario = User::factory()->for($empresa)->create();
-        $linea = ['codigo_principal' => 'A', 'descripcion' => 'Producto', 'cantidad' => 1, 'precio_unitario' => 1.005, 'tarifa' => 15];
+        $linea = ['codigo_principal' => 'A', 'descripcion' => 'Producto', 'cantidad' => 1, 'precio_unitario' => 1.005, 'codigo_porcentaje' => '4'];
         $factura = (new GuardarBorradorFacturaAction)->ejecutar(null, $empresa->id, $usuario->id, [
             'fecha_emision' => '2026-10-03',
             'tipo_identificacion_comprador' => '05',

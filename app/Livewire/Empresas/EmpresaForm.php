@@ -4,6 +4,7 @@ namespace App\Livewire\Empresas;
 
 use App\Actions\Empresas\GuardarEmpresaAction;
 use App\Models\Empresa;
+use App\Rules\RucEcuatoriano;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -38,8 +39,7 @@ class EmpresaForm extends Component
 
     public function mount(?Empresa $empresa = null): void
     {
-        
-        
+
         if ($empresa && $empresa->exists) {
             $this->authorize('update', $empresa);
 
@@ -76,7 +76,7 @@ class EmpresaForm extends Component
         }
 
         $datos = $this->validate([
-            'ruc' => ['required', 'digits:13', Rule::unique('empresas', 'ruc')->ignore($this->empresa?->id)],
+            'ruc' => ['required', new RucEcuatoriano, Rule::unique('empresas', 'ruc')->ignore($this->empresa?->id)],
             'razon_social' => ['required', 'string', 'max:300'],
             'nombre_comercial' => ['nullable', 'string', 'max:300'],
             'dir_matriz' => ['required', 'string', 'max:300'],
@@ -85,13 +85,12 @@ class EmpresaForm extends Component
             'establecimiento' => ['required', 'digits:3'],
             'punto_emision' => ['required', 'digits:3'],
             'ambiente' => ['required', 'in:1,2'],
-            
-            
+
             'certificado' => ['nullable', 'file', 'max:2048'],
             'certificado_password' => [Rule::requiredIf(fn () => (bool) $this->certificado), 'nullable', 'string'],
         ]);
 
-        $accion->ejecutar(
+        $empresa = $accion->ejecutar(
             $this->empresa,
             [
                 'ruc' => $datos['ruc'],
@@ -110,7 +109,11 @@ class EmpresaForm extends Component
 
         session()->flash('status', __('Empresa guardada correctamente.'));
 
-        $this->redirectRoute('empresas.index', navigate: true);
+        if (auth()->user()->can('viewAny', Empresa::class)) {
+            $this->redirectRoute('empresas.index', navigate: true);
+        } else {
+            $this->redirectRoute('empresas.edit', $empresa, navigate: true);
+        }
     }
 
     public function render()

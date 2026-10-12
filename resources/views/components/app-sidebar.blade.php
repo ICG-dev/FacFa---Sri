@@ -27,7 +27,7 @@
             <span class="font-heading font-extrabold text-sm text-sidebar-primary-foreground">SRI</span>
         </div>
         <div class="min-w-0" x-show="sidebarOpen || mobileOpen" x-cloak>
-            <div class="font-heading font-bold text-sm tracking-tight text-white truncate">{{ config('app.name') }}</div>
+            <div class="font-heading font-bold text-sm tracking-tight text-sidebar-foreground truncate">{{ config('app.name') }}</div>
             <div class="text-[10px] text-muted-foreground tracking-wider">FACTURACIÓN ELECTRÓNICA</div>
         </div>
         <button @click="mobileOpen = false" class="ml-auto p-1 text-sidebar-foreground lg:hidden">
@@ -36,9 +36,9 @@
     </div>
 
     @if ($empresa)
-        <div class="mx-3 mt-3 mb-1 rounded-lg px-3 py-2.5 flex-shrink-0 bg-white/[.06] border border-sidebar-border" x-show="sidebarOpen || mobileOpen" x-cloak>
+        <div class="mx-3 mt-3 mb-1 rounded-lg px-3 py-2.5 flex-shrink-0 bg-sidebar-accent border border-sidebar-border" x-show="sidebarOpen || mobileOpen" x-cloak>
             <div class="text-[10px] text-muted-foreground tracking-wider mb-0.5">EMPRESA ACTIVA</div>
-            <div class="text-xs font-semibold text-white truncate">{{ $empresa->razon_social }}</div>
+            <div class="text-xs font-semibold text-sidebar-foreground truncate">{{ $empresa->razon_social }}</div>
             <div class="text-[11px] text-muted-foreground font-mono">RUC: {{ $empresa->ruc }}</div>
         </div>
     @endif

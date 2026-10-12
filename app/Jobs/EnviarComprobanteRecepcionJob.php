@@ -31,7 +31,10 @@ class EnviarComprobanteRecepcionJob implements ShouldQueue
         $claveRegistrada = $respuesta['estado'] === 'DEVUELTA'
             && collect($respuesta['mensajes'])->contains(fn ($mensaje) => (string) ($mensaje['identificador'] ?? '') === '43');
 
-        if ($respuesta['estado'] === 'RECIBIDA' || $claveRegistrada) {
+        $tieneError = collect($respuesta['mensajes'])
+            ->contains(fn ($mensaje) => strtoupper((string) ($mensaje['tipo'] ?? '')) === 'ERROR');
+
+        if (($respuesta['estado'] === 'RECIBIDA' && ! $tieneError) || $claveRegistrada) {
             ConsultarAutorizacionJob::dispatch($this->factura)
                 ->onQueue('sri')
                 ->delay(now()->addSeconds(config('sri.autorizacion_delay_inicial')));

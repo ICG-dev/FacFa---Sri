@@ -8,13 +8,9 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    
-
-
-
     public function run(): void
     {
-        $this->call(RolesAndPermissionsSeeder::class);
+        $this->call([RolesAndPermissionsSeeder::class, TarifaIvaSeeder::class]);
 
         $empresa = Empresa::create([
             'ruc' => '1792146739001',

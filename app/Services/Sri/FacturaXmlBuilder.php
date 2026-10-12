@@ -7,11 +7,6 @@ use App\Models\Factura;
 use DOMDocument;
 use DOMElement;
 
-
-
-
-
-
 class FacturaXmlBuilder
 {
     public function build(Factura $factura, Empresa $empresa): string
@@ -23,7 +18,7 @@ class FacturaXmlBuilder
 
         $root = $doc->createElement('factura');
         $root->setAttribute('id', 'comprobante');
-        $root->setAttribute('version', '1.0.0');
+        $root->setAttribute('version', '2.1.0');
         $doc->appendChild($root);
 
         $root->appendChild($this->infoTributaria($doc, $factura, $empresa));
@@ -62,6 +57,11 @@ class FacturaXmlBuilder
         $info = $doc->createElement('infoFactura');
 
         $this->append($doc, $info, 'fechaEmision', $factura->fecha_emision->format('d/m/Y'));
+
+        $dirEst = $empresa->dir_establecimiento ?? $empresa->dir_matriz;
+        if ($dirEst) {
+            $this->append($doc, $info, 'dirEstablecimiento', $dirEst);
+        }
 
         if ($empresa->contribuyente_especial) {
             $this->append($doc, $info, 'contribuyenteEspecial', $empresa->contribuyente_especial);
@@ -108,23 +108,7 @@ class FacturaXmlBuilder
 
     private function agruparImpuestos(Factura $factura): array
     {
-        $grupos = [];
-
-        foreach ($factura->detalles as $detalle) {
-            $clave = $detalle->codigo_impuesto.'|'.$detalle->codigo_porcentaje;
-
-            $grupos[$clave] ??= [
-                'codigo_impuesto' => $detalle->codigo_impuesto,
-                'codigo_porcentaje' => $detalle->codigo_porcentaje,
-                'base_imponible' => 0,
-                'valor' => 0,
-            ];
-
-            $grupos[$clave]['base_imponible'] = round($grupos[$clave]['base_imponible'] + (float) $detalle->base_imponible, 2);
-            $grupos[$clave]['valor'] = round($grupos[$clave]['valor'] + (float) $detalle->valor_impuesto, 2);
-        }
-
-        return array_values($grupos);
+        return app(FacturaCalculoService::class)->sumarDetalles($factura->detalles)['totalConImpuestos'];
     }
 
     private function pagos(DOMDocument $doc, Factura $factura): DOMElement
@@ -149,8 +133,8 @@ class FacturaXmlBuilder
 
             $this->append($doc, $detalle, 'codigoPrincipal', $linea->codigo_principal);
             $this->append($doc, $detalle, 'descripcion', $linea->descripcion);
-            $this->append($doc, $detalle, 'cantidad', $this->money($linea->cantidad));
-            $this->append($doc, $detalle, 'precioUnitario', $this->money($linea->precio_unitario));
+            $this->append($doc, $detalle, 'cantidad', FacturaCalculoService::formatear($linea->cantidad, 6));
+            $this->append($doc, $detalle, 'precioUnitario', FacturaCalculoService::formatear($linea->precio_sin_subsidio, 6));
             $this->append($doc, $detalle, 'descuento', $this->money($linea->descuento));
             $this->append($doc, $detalle, 'precioTotalSinImpuesto', $this->money($linea->precio_total_sin_impuesto));
 
@@ -182,9 +166,7 @@ class FacturaXmlBuilder
 
     private function append(DOMDocument $doc, DOMElement $parent, string $tag, string $value): DOMElement
     {
-        
-        
-        
+
         $element = $doc->createElement($tag);
         $element->appendChild($doc->createTextNode($value));
         $parent->appendChild($element);
@@ -194,6 +176,6 @@ class FacturaXmlBuilder
 
     private function money(mixed $value): string
     {
-        return number_format((float) $value, 2, '.', '');
+        return FacturaCalculoService::formatear($value);
     }
 }
