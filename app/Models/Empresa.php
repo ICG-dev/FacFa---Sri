@@ -73,4 +73,9 @@ class Empresa extends Model
     {
         return $this->hasMany(Producto::class);
     }
+
+    public function reglasFacturacion(): HasMany
+    {
+        return $this->hasMany(ReglaFacturacion::class);
+    }
 }

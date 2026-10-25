@@ -59,7 +59,7 @@ class ConfirmarFacturaAction
             return $factura;
         });
 
-        EnviarComprobanteRecepcionJob::dispatch($factura)->onQueue('sri');
+        EnviarComprobanteRecepcionJob::dispatch($factura)->onQueue('sri')->afterCommit();
 
         return $factura;
     }

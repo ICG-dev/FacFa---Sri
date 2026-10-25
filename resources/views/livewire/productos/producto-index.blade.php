@@ -50,7 +50,9 @@
                         @foreach ($productos as $producto)
                             <tr wire:key="producto-{{ $producto->id }}" class="hover:bg-muted/30 transition-colors">
                                 <td class="px-4 md:px-5 py-3 font-mono text-foreground">{{ $producto->codigo_principal }}</td>
-                                <td class="px-4 md:px-5 py-3 text-foreground">{{ $producto->descripcion }}</td>
+                                <td class="px-4 md:px-5 py-3 text-foreground">{{ $producto->descripcion }}
+                                    @if($producto->reglas_facturacion_count)<span class="block text-xs text-muted-foreground">{{ $producto->reglas_facturacion_count }} {{ $producto->reglas_facturacion_count === 1 ? 'regla periódica' : 'reglas periódicas' }}</span>@endif
+                                </td>
                                 <td class="px-4 md:px-5 py-3 text-right font-mono text-foreground">${{ number_format($producto->precio_unitario, 2) }}</td>
                                 <td class="px-4 md:px-5 py-3 text-right text-muted-foreground">{{ number_format($producto->tarifa, 0) }}%</td>
                                 <td class="px-4 md:px-5 py-3 text-right whitespace-nowrap">

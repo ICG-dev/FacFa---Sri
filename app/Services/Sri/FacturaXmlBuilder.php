@@ -118,6 +118,10 @@ class FacturaXmlBuilder
 
         $this->append($doc, $pago, 'formaPago', str_pad((string) ($factura->forma_pago ?? 1), 2, '0', STR_PAD_LEFT));
         $this->append($doc, $pago, 'total', $this->money($factura->importe_total));
+        if ($factura->tiempo_plazo !== null) {
+            $this->append($doc, $pago, 'plazo', (string) $factura->tiempo_plazo);
+            $this->append($doc, $pago, 'unidadTiempo', $factura->unidad_tiempo ?? 'dias');
+        }
 
         $pagos->appendChild($pago);
 

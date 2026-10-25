@@ -23,9 +23,9 @@
     }"
 >
     <div class="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border flex-shrink-0">
-        <div class="flex items-center justify-center rounded-lg flex-shrink-0 bg-sidebar-primary w-9 h-9">
-            <span class="font-heading font-extrabold text-sm text-sidebar-primary-foreground">SRI</span>
-        </div>
+        <a href="{{ route('dashboard') }}" wire:navigate class="flex-shrink-0">
+            <img src="{{ asset('favicon.svg') }}" class="w-9 h-9 rounded-lg shadow-sm" alt="{{ config('app.name') }}" />
+        </a>
         <div class="min-w-0" x-show="sidebarOpen || mobileOpen" x-cloak>
             <div class="font-heading font-bold text-sm tracking-tight text-sidebar-foreground truncate">{{ config('app.name') }}</div>
             <div class="text-[10px] text-muted-foreground tracking-wider">FACTURACIÓN ELECTRÓNICA</div>
@@ -61,6 +61,14 @@
                     <span x-show="sidebarOpen || mobileOpen" x-cloak class="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none bg-sidebar-primary text-sidebar-primary-foreground">{{ $borradoresPendientes }}</span>
                     <span x-show="! (sidebarOpen || mobileOpen)" class="absolute top-1.5 right-1.5 rounded-full w-1.5 h-1.5 bg-sidebar-primary"></span>
                 @endif
+            </a>
+        @endcan
+
+        @can('viewAny', \App\Models\ReglaFacturacion::class)
+            <a href="{{ route('reglas-facturacion.index') }}" wire:navigate title="Reglas de facturación"
+               class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('reglas-facturacion.*') ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold' : 'text-sidebar-foreground hover:bg-sidebar-accent' }}">
+                <svg class="h-[17px] w-[17px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7h-6m6 0V1m0 6A9 9 0 103 16M12 7v5l3 2" /></svg>
+                <span x-show="sidebarOpen || mobileOpen" x-cloak>Reglas de facturación</span>
             </a>
         @endcan
 

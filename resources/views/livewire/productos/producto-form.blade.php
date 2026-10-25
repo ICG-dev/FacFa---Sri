@@ -5,6 +5,9 @@
 </x-slot>
 
 <div class="max-w-3xl">
+    @if($producto && $producto->reglasFacturacion()->where('reglas_facturacion.empresa_id', auth()->user()->empresa_id)->exists())
+        <p class="mb-4 p-3 rounded-lg bg-muted text-foreground text-sm">Este producto está asociado a reglas periódicas. Los precios y cantidades de cada regla se editan en el módulo de reglas.</p>
+    @endif
     <form wire:submit="guardar" class="bg-card text-card-foreground border border-border rounded-lg p-6 space-y-6">
 
         <section class="grid grid-cols-1 sm:grid-cols-2 gap-6">

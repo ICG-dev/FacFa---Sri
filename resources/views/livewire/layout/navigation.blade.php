@@ -16,6 +16,10 @@ new class extends Component
     {
         $ruta = request()->route()?->getName();
         $paginas = [
+            'reglas-facturacion.index' => [__('Reglas de facturación'), null],
+            'reglas-facturacion.create' => [__('Nueva regla'), 'reglas-facturacion.index'],
+            'reglas-facturacion.edit' => [__('Editar regla'), 'reglas-facturacion.index'],
+            'reglas-facturacion.show' => [__('Historial'), 'reglas-facturacion.index'],
             'dashboard' => [__('Dashboard'), null],
             'facturas.index' => [__('Facturas'), null],
             'facturas.create' => [__('Nueva factura'), 'facturas.index'],

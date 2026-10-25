@@ -29,6 +29,8 @@ class Factura extends Model
         'total_descuento',
         'importe_total',
         'forma_pago',
+        'tiempo_plazo',
+        'unidad_tiempo',
         'establecimiento',
         'punto_emision',
         'secuencial',
@@ -44,6 +46,7 @@ class Factura extends Model
     ];
 
     protected $casts = [
+        'tiempo_plazo' => 'integer',
         'ambiente' => 'integer',
         'fecha_emision' => 'date',
         'fecha_autorizacion' => 'datetime',

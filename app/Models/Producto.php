@@ -35,4 +35,9 @@ class Producto extends Model
     {
         return $this->belongsTo(Empresa::class);
     }
+
+    public function reglasFacturacion(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ReglaFacturacion::class, 'regla_facturacion_productos', 'producto_id', 'regla_id');
+    }
 }

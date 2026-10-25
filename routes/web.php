@@ -56,3 +56,10 @@ Route::middleware(['auth', 'verified'])->prefix('usuarios')->name('usuarios.')->
 });
 
 require __DIR__.'/auth.php';
+
+Route::middleware(['auth', 'verified'])->prefix('reglas-facturacion')->name('reglas-facturacion.')->group(function () {
+    Route::get('/', \App\Livewire\ReglasFacturacion\ReglaFacturacionIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\ReglasFacturacion\ReglaFacturacionForm::class)->name('create');
+    Route::get('/{regla}/editar', \App\Livewire\ReglasFacturacion\ReglaFacturacionForm::class)->whereNumber('regla')->name('edit');
+    Route::get('/{regla}', \App\Livewire\ReglasFacturacion\ReglaFacturacionShow::class)->whereNumber('regla')->name('show');
+});
